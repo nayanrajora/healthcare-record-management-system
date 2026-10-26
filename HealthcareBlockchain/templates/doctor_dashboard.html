@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor Dashboard{% endblock %}
+{% block page_title %}Doctor Clinical Portal{% endblock %}
+{% block page_subtitle %}Manage patient consultations, diagnoses, and blockchain-anchored medical entries{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('create_record_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Medical Record
+</a>
+<a href="{{ url_for('list_patients') }}" class="btn btn-secondary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    View Patients
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Doctor Profile Summary Card -->
+<div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(to right, #ffffff, #f0fdfa);">
+    <div class="card-body" style="padding: 1.25rem 1.5rem;">
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Physician Name</span>
+                <span class="detail-value">{{ session.get('full_name') }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Doctor Code</span>
+                <span class="detail-value"><code>{{ session.get('doctor_code', 'DOC-N/A') }}</code></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Specialization</span>
+                <span class="detail-value">{{ session.get('specialization', 'General Medicine') }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Session Status</span>
+                <span class="status-pill valid">Authenticated</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="grid-stats">
+    <div class="stat-card">
+        <div class="stat-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ my_records|length }}</span>
+            <span class="stat-label">Records Authored By Me</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_patients }}</span>
+            <span class="stat-label">Total Clinic Patients</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">SHA-256</span>
+            <span class="stat-label">Ledger Hash Standard</span>
+        </div>
+    </div>
+</div>
+
+<!-- My Recent Records Table -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            My Authored Medical Records
+        </div>
+        <input type="text" class="form-control table-search-input" data-target-table="doctor-records-table" placeholder="Filter records..." style="max-width: 240px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+    </div>
+    <div class="table-responsive">
+        <table class="data-table" id="doctor-records-table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Patient</th>
+                    <th>Type</th>
+                    <th>Diagnosis / Clinical Summary</th>
+                    <th>Version</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in my_records %}
+                <tr>
+                    <td><strong>#{{ rec.id }}</strong></td>
+                    <td>
+                        <a href="{{ url_for('view_patient_detail', patient_id=rec.patient_id) }}" style="text-decoration: none; font-weight: 600; color: var(--primary);">
+                            {{ rec.patient_name }}
+                        </a>
+                        <div style="font-size: 0.72rem; color: var(--text-muted);">{{ rec.patient_code }}</div>
+                    </td>
+                    <td><span class="status-pill info">{{ rec.record_type }}</span></td>
+                    <td>
+                        <div style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rec.diagnosis }}">
+                            {{ rec.diagnosis }}
+                        </div>
+                    </td>
+                    <td><span class="status-pill warning">v{{ rec.current_version }}</span></td>
+                    <td>{{ rec.updated_at[:10] }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('view_record_detail', record_id=rec.id) }}" class="btn btn-secondary btn-sm" title="View Details">
+                                View
+                            </a>
+                            <a href="{{ url_for('edit_record_page', record_id=rec.id) }}" class="btn btn-primary btn-sm" title="Update Record & Anchor New Version">
+                                Update
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <h3>No Records Authored Yet</h3>
+                        <p>Click "Add Medical Record" above to record consultations and treatments for registered patients.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

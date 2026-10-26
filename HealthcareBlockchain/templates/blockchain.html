@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Ledger Explorer{% endblock %}
+{% block page_title %}Blockchain Ledger Explorer{% endblock %}
+{% block page_subtitle %}Cryptographically linked SHA-256 hash chain providing an immutable audit trail for medical entries{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('verify_blockchain_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Run Integrity Audit
+</a>
+{% if session.get('role') == 'admin' %}
+<a href="{{ url_for('tamper_demo_page') }}" class="btn btn-secondary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+    Tamper Simulation Tool
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-body" style="background-color: #f0fdfa; border-radius: var(--radius-md);">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; color: var(--primary-hover); margin-bottom: 0.25rem;">
+                    Cryptographic Hash Chain Architecture
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); max-width: 750px;">
+                    Each block bundles the event metadata, medical record ID/version, and the canonical SHA-256 digest of the clinical record. 
+                    The current block's hash is computed over all header properties plus the <code>previous_hash</code>, forming an unbroken cryptographic chain.
+                </p>
+            </div>
+            <div>
+                <span class="status-pill valid" style="font-size: 0.85rem;">Total Chain Length: {{ blocks|length }} Blocks</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Complete Hash Ledger
+        </div>
+        <input type="text" class="form-control table-search-input" data-target-table="blockchain-ledger-table" placeholder="Filter blocks..." style="max-width: 240px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+    </div>
+    <div class="table-responsive">
+        <table class="data-table" id="blockchain-ledger-table">
+            <thead>
+                <tr>
+                    <th>Index</th>
+                    <th>Timestamp (UTC)</th>
+                    <th>Event Type</th>
+                    <th>Medical Record</th>
+                    <th>Record Hash (Canonical)</th>
+                    <th>Previous Block Hash</th>
+                    <th>Current Block Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for block in blocks %}
+                <tr id="block-{{ block.block_index }}">
+                    <td>
+                        <strong style="font-size: 1rem; color: var(--primary);">#{{ block.block_index }}</strong>
+                    </td>
+                    <td style="font-size: 0.82rem;">{{ block.timestamp }}</td>
+                    <td>
+                        <span class="status-pill {% if block.event_type == 'GENESIS' %}info{% elif block.event_type == 'RECORD_CREATE' %}valid{% else %}warning{% endif %}">
+                            {{ block.event_type }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if block.record_id %}
+                            <a href="{{ url_for('view_record_detail', record_id=block.record_id) }}" style="font-weight: 600; color: var(--primary); text-decoration: none;">
+                                Record #{{ block.record_id }} (v{{ block.record_version }})
+                            </a>
+                        {% else %}
+                            <span style="color: var(--text-muted);">None (Genesis)</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ block.record_hash }}" title="Click to copy canonical record hash">
+                            {{ block.record_hash[:16] }}...
+                        </span>
+                    </td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ block.previous_hash }}" title="Click to copy previous block hash">
+                            {{ block.previous_hash[:16] }}...
+                        </span>
+                    </td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ block.block_hash }}" style="background-color: #ecfdf5; border-color: #a7f3d0; color: #065f46; font-weight: 600;" title="Click to copy current block hash">
+                            {{ block.block_hash[:16] }}...
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

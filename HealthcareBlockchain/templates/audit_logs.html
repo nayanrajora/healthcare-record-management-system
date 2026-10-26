@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}System Audit Logs{% endblock %}
+{% block page_title %}Security & System Audit Trail{% endblock %}
+{% block page_subtitle %}Immutable chronological audit logs of all user authentication, record mutations, and integrity events{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            System Event Log ({{ logs|length }} entries)
+        </div>
+        <input type="text" class="form-control table-search-input" data-target-table="audit-table" placeholder="Filter by action, user, or IP..." style="max-width: 260px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+    </div>
+    <div class="table-responsive">
+        <table class="data-table" id="audit-table">
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Timestamp (UTC)</th>
+                    <th>Actor</th>
+                    <th>Role</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>IP Address</th>
+                    <th>Audit Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td><code>#{{ log.id }}</code></td>
+                    <td style="font-size: 0.82rem;">{{ log.timestamp }}</td>
+                    <td><strong>{{ log.actor_username or 'System' }}</strong></td>
+                    <td>
+                        {% if log.actor_role %}
+                            <span class="user-badge badge-{{ log.actor_role }}">{{ log.actor_role }}</span>
+                        {% else %}
+                            <span class="status-pill info">Automated</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="status-pill {% if 'TAMPER' in log.action %}tampered{% elif 'CREATE' in log.action or 'REGISTER' in log.action %}valid{% else %}info{% endif %}">{{ log.action }}</span></td>
+                    <td>{{ log.entity_type }} {% if log.entity_id %}#{{ log.entity_id }}{% endif %}</td>
+                    <td><code>{{ log.ip_address }}</code></td>
+                    <td style="font-size: 0.84rem;">{{ log.details }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-state">No audit events recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

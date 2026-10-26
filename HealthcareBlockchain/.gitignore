@@ -1,0 +1,32 @@
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# SQLite database files and instance directory runtime data
+instance/*.db
+instance/*.db-journal
+instance/*.sqlite
+instance/*.sqlite3
+*.db
+*.sqlite3
+
+# Environment files
+.env
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE files
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Dashboard{% endblock %}
+{% block page_title %}System Administration{% endblock %}
+{% block page_subtitle %}Centralized Electronic Medical Record & Blockchain Ledger Overview{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('verify_blockchain_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Run Integrity Audit
+</a>
+<a href="{{ url_for('tamper_demo_page') }}" class="btn btn-secondary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+    Tamper Simulation
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Metrics Grid -->
+<div class="grid-stats">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_patients }}</span>
+            <span class="stat-label">Registered Patients</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_doctors }}</span>
+            <span class="stat-label">Active Doctors</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_records }}</span>
+            <span class="stat-label">Medical Records</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div class="stat-info">
+            <span class="stat-value">{{ total_blocks }}</span>
+            <span class="stat-label">Blockchain Blocks</span>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Blockchain Ledger Snippet -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/></svg>
+            Recent Blockchain Blocks
+        </div>
+        <a href="{{ url_for('view_blockchain') }}" class="btn btn-secondary btn-sm">View Full Ledger</a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Block #</th>
+                    <th>Timestamp (UTC)</th>
+                    <th>Event Type</th>
+                    <th>Record ID</th>
+                    <th>Version</th>
+                    <th>Block Hash (SHA-256)</th>
+                    <th>Previous Hash</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for block in recent_blocks %}
+                <tr>
+                    <td><strong>#{{ block.block_index }}</strong></td>
+                    <td>{{ block.timestamp }}</td>
+                    <td>
+                        <span class="status-pill {% if block.event_type == 'GENESIS' %}info{% elif block.event_type == 'RECORD_CREATE' %}valid{% else %}warning{% endif %}">
+                            {{ block.event_type }}
+                        </span>
+                    </td>
+                    <td>{% if block.record_id %}Record #{{ block.record_id }}{% else %}—{% endif %}</td>
+                    <td>{% if block.record_version %}v{{ block.record_version }}{% else %}—{% endif %}</td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ block.block_hash }}">
+                            {{ block.block_hash[:16] }}...
+                        </span>
+                    </td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ block.previous_hash }}">
+                            {{ block.previous_hash[:16] }}...
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state">No blocks found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Recent Audit Trail Snippet -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Recent Security & Audit Logs
+        </div>
+        <a href="{{ url_for('view_audit_logs') }}" class="btn btn-secondary btn-sm">View All Logs</a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>Entity</th>
+                    <th>IP Address</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.timestamp }}</td>
+                    <td><strong>{{ log.actor_username or 'System' }}</strong></td>
+                    <td><span class="status-pill info">{{ log.action }}</span></td>
+                    <td>{{ log.entity_type }} #{{ log.entity_id or '—' }}</td>
+                    <td><code>{{ log.ip_address }}</code></td>
+                    <td>{{ log.details }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="empty-state">No audit logs recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+HealthcareBlockchain/.venv/
+**/[Vv]env/
+**/.venv/
+
+# Python Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+**/__pycache__/
+
+# SQLite local databases and runtime instances
+instance/*.db
+instance/*.db-journal
+instance/*.sqlite
+instance/*.sqlite3
+*.db
+*.sqlite
+*.sqlite3
+**/instance/*.db
+**/instance/*.sqlite*
+
+# Environment variables & secrets
+.env
+*.env
+!.env.example
+
+# Testing, coverage, and caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor and OS generated files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.swp
+*.bak

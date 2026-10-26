@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Integrity Verification{% endblock %}
+{% block page_title %}Dual-Phase Cryptographic Integrity Audit{% endblock %}
+{% block page_subtitle %}Validates hash pointers, sequential continuity, and cross-checks actual database records against block fingerprints{% endblock %}
+
+{% block top_actions %}
+<form action="{{ url_for('verify_blockchain_page') }}" method="POST" style="margin: 0;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-primary btn-sm">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+        Re-run Cryptographic Audit
+    </button>
+</form>
+{% endblock %}
+
+{% block content %}
+<!-- Major Result Banner -->
+<div class="card" style="border-top: 5px solid {% if result.is_valid %}#10b981{% else %}#ef4444{% endif %}; margin-bottom: 2rem;">
+    <div class="card-body" style="padding: 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+        <div style="width: 64px; height: 64px; border-radius: var(--radius-lg); background-color: {% if result.is_valid %}var(--success-bg){% else %}var(--danger-bg){% endif %}; color: {% if result.is_valid %}var(--success-text){% else %}var(--danger-text){% endif %}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+            {% if result.is_valid %}
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            {% else %}
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {% endif %}
+        </div>
+        <div style="flex-grow: 1;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.4rem;">
+                <h2 style="font-size: 1.35rem; font-weight: 700; color: {% if result.is_valid %}var(--success-text){% else %}var(--danger-text){% endif %};">
+                    {% if result.is_valid %}
+                        100% Cryptographic Ledger & Record Integrity Verified
+                    {% else %}
+                        Integrity Failure: Unauthorized Data Tampering Detected!
+                    {% endif %}
+                </h2>
+                <span class="status-pill {% if result.is_valid %}valid{% else %}tampered{% endif %}" style="font-size: 0.75rem;">
+                    {{ "AUDIT PASSED" if result.is_valid else "AUDIT FAILED" }}
+                </span>
+            </div>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                {% if result.is_valid %}
+                    All {{ result.total_blocks }} blockchain blocks exhibit unbroken SHA-256 hash chaining, valid Genesis configuration, 
+                    and 100% match with the actual stored database records ({{ result.total_records_checked }} record versions verified against ground-truth data).
+                {% else %}
+                    The cryptographic verification algorithm detected a discrepancy between the blockchain hash ledger and the database contents!
+                {% endif %}
+            </p>
+            <div style="font-size: 0.8rem; color: var(--text-light);">
+                Audit Executed At: <code>{{ result.verified_at }}</code> | Total Blocks Audited: <strong>{{ result.total_blocks }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Errors Section (If Any) -->
+{% if not result.is_valid and result.errors %}
+<div class="card" style="border-left: 4px solid #ef4444; margin-bottom: 2rem;">
+    <div class="card-header" style="background-color: var(--danger-bg); border-bottom-color: var(--danger-border);">
+        <div class="card-title" style="color: var(--danger-text);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Discrepancies Identified During Dual-Phase Verification
+        </div>
+    </div>
+    <div class="card-body">
+        <ul style="padding-left: 1.25rem; color: var(--danger-text); font-size: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for err in result.errors %}
+                <li><strong>{{ err }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<!-- Per-Block Audit Breakdown -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Block-by-Block Audit Results
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Block #</th>
+                    <th>Event Type</th>
+                    <th>Associated Record</th>
+                    <th>Status</th>
+                    <th>Verification Audit Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b_stat in result.blocks_status %}
+                <tr>
+                    <td><strong>#{{ b_stat.block_index }}</strong></td>
+                    <td>
+                        <span class="status-pill {% if b_stat.event_type == 'GENESIS' %}info{% elif b_stat.event_type == 'RECORD_CREATE' %}valid{% else %}warning{% endif %}">
+                            {{ b_stat.event_type }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if b_stat.record_id %}
+                            Record #{{ b_stat.record_id }} (v{{ b_stat.record_version }})
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-pill {% if b_stat.status == 'VALID' %}valid{% else %}tampered{% endif %}">
+                            {{ b_stat.status }}
+                        </span>
+                    </td>
+                    <td style="font-size: 0.85rem; color: {% if b_stat.status == 'VALID' %}var(--text-muted){% else %}var(--danger-text){% endif %};">
+                        {{ b_stat.details }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

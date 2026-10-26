@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Profile - {{ patient.full_name }}{% endblock %}
+{% block page_title %}{{ patient.full_name }}{% endblock %}
+{% block page_subtitle %}Patient Demographic Profile and Clinical History{% endblock %}
+
+{% block top_actions %}
+{% if session.get('role') == 'doctor' %}
+<a href="{{ url_for('create_record_page', patient_id=patient.id) }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Medical Record
+</a>
+{% endif %}
+<a href="{{ url_for('list_patients') }}" class="btn btn-secondary btn-sm">Back to Directory</a>
+{% endblock %}
+
+{% block content %}
+<!-- Demographics Card -->
+<div class="card" style="margin-bottom: 2rem;">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Demographic Information
+        </div>
+        <span class="status-pill info">Patient ID: {{ patient.patient_code }}</span>
+    </div>
+    <div class="card-body">
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Full Name</span>
+                <span class="detail-value">{{ patient.full_name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{ patient.date_of_birth }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Gender</span>
+                <span class="detail-value">{{ patient.gender }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Blood Group</span>
+                <span class="detail-value" style="color: #dc2626; font-weight: 700;">{{ patient.blood_group }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Phone</span>
+                <span class="detail-value">{{ patient.contact_phone }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Emergency Contact</span>
+                <span class="detail-value">{{ patient.emergency_contact }}</span>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
+                <span class="detail-label">Address</span>
+                <span class="detail-value">{{ patient.address }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medical History Timeline -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            Clinical History & Records ({{ records|length }})
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Type</th>
+                    <th>Attending Doctor</th>
+                    <th>Diagnosis / Clinical Summary</th>
+                    <th>Prescription / Treatment</th>
+                    <th>Version</th>
+                    <th>Recorded Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in records %}
+                <tr>
+                    <td><strong>#{{ rec.id }}</strong></td>
+                    <td><span class="status-pill info">{{ rec.record_type }}</span></td>
+                    <td>{{ rec.doctor_name }}</td>
+                    <td>
+                        <div style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rec.diagnosis }}">
+                            {{ rec.diagnosis }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rec.prescription }}">
+                            {{ rec.prescription }}
+                        </div>
+                    </td>
+                    <td><span class="status-pill warning">v{{ rec.current_version }}</span></td>
+                    <td>{{ rec.created_at[:10] }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('view_record_detail', record_id=rec.id) }}" class="btn btn-secondary btn-sm">
+                                View
+                            </a>
+                            {% if session.get('role') == 'doctor' %}
+                            <a href="{{ url_for('edit_record_page', record_id=rec.id) }}" class="btn btn-primary btn-sm">
+                                Update
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <h3>No Medical Records Recorded</h3>
+                        <p>No clinical records exist for this patient yet.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

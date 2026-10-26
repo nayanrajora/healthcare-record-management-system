@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Record #{{ record.id }} Details{% endblock %}
+{% block page_title %}Medical Record #{{ record.id }}{% endblock %}
+{% block page_subtitle %}Cryptographically verified electronic clinical entry{% endblock %}
+
+{% block top_actions %}
+{% if session.get('role') == 'doctor' %}
+<a href="{{ url_for('edit_record_page', record_id=record.id) }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Update (Create Version {{ record.current_version + 1 }})
+</a>
+{% endif %}
+<a href="{{ url_for('view_record_history', record_id=record.id) }}" class="btn btn-secondary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+    Version History ({{ versions|length }})
+</a>
+<a href="{{ url_for('list_records') if session.get('role') != 'patient' else url_for('dashboard') }}" class="btn btn-secondary btn-sm">
+    Back
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Cryptographic Verification Banner -->
+<div class="card" style="margin-bottom: 1.5rem; border-left: 4px solid {% if integrity.is_valid %}#10b981{% else %}#ef4444{% endif %};">
+    <div class="card-body" style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 44px; height: 44px; border-radius: var(--radius-md); background-color: {% if integrity.is_valid %}var(--success-bg){% else %}var(--danger-bg){% endif %}; color: {% if integrity.is_valid %}var(--success-text){% else %}var(--danger-text){% endif %}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                {% if integrity.is_valid %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                {% else %}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                {% endif %}
+            </div>
+            <div>
+                <div style="font-weight: 700; font-size: 1.05rem; color: {% if integrity.is_valid %}var(--success-text){% else %}var(--danger-text){% endif %};">
+                    {% if integrity.is_valid %}
+                        Blockchain Integrity Verified: Untampered
+                    {% else %}
+                        CRITICAL WARNING: Tampering Detected in Database Records!
+                    {% endif %}
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.2rem;">
+                    {% if integrity.is_valid %}
+                        All {{ integrity.versions|length }} version snapshots dynamically match the SHA-256 hashes recorded on the blockchain blocks.
+                    {% else %}
+                        One or more fields in the SQLite database have been modified directly, mismatching the anchored SHA-256 hash.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div>
+            <span class="status-pill {% if integrity.is_valid %}valid{% else %}tampered{% endif %}" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">
+                Current Version: v{{ record.current_version }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Metadata Card -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Patient & Clinical Metadata
+        </div>
+        <span class="status-pill info">{{ record.record_type }}</span>
+    </div>
+    <div class="card-body">
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Patient Name</span>
+                <span class="detail-value">
+                    {% if session.get('role') != 'patient' %}
+                        <a href="{{ url_for('view_patient_detail', patient_id=record.patient_id) }}" style="text-decoration: none; color: var(--primary);">
+                            {{ record.patient_name }}
+                        </a>
+                    {% else %}
+                        {{ record.patient_name }}
+                    {% endif %}
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Patient ID Code</span>
+                <span class="detail-value"><code>{{ record.patient_code }}</code></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Attending Doctor</span>
+                <span class="detail-value">{{ record.doctor_name }} ({{ record.doctor_code }})</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Specialization</span>
+                <span class="detail-value">{{ record.doctor_specialization }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Initial Created Date</span>
+                <span class="detail-value">{{ record.created_at }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Last Updated Date</span>
+                <span class="detail-value">{{ record.updated_at }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clinical Content -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            Diagnosis & Clinical Assessment
+        </div>
+    </div>
+    <div class="card-body" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; background-color: #fafbfc; border-radius: var(--radius-sm); padding: 1.25rem;">{{ record.diagnosis }}</div>
+</div>
+
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Prescription & Medical Treatment Plan
+        </div>
+    </div>
+    <div class="card-body" style="font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; background-color: #fafbfc; border-radius: var(--radius-sm); padding: 1.25rem;">{{ record.prescription }}</div>
+</div>
+
+<!-- Version Blockchain Fingerprints -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Cryptographic Version Fingerprints (SHA-256)
+        </div>
+        <a href="{{ url_for('view_record_history', record_id=record.id) }}" class="btn btn-secondary btn-sm">Full Timeline</a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Timestamp</th>
+                    <th>Canonical Record SHA-256 Hash</th>
+                    <th>Anchored Block</th>
+                    <th>Integrity Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v_stat in integrity.versions %}
+                <tr>
+                    <td><strong>Version {{ v_stat.version_number }}</strong></td>
+                    <td>{{ v_stat.created_at }}</td>
+                    <td>
+                        <span class="hash-badge hash-copyable" data-full-hash="{{ v_stat.recalculated_hash }}">
+                            {{ v_stat.recalculated_hash[:20] }}...
+                        </span>
+                    </td>
+                    <td>
+                        {% if v_stat.block_index is not none %}
+                            <a href="{{ url_for('view_blockchain') }}#block-{{ v_stat.block_index }}" style="font-weight: 600; color: var(--primary); text-decoration: none;">
+                                Block #{{ v_stat.block_index }}
+                            </a>
+                        {% else %}
+                            <span class="status-pill tampered">Missing Block</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if v_stat.is_valid %}
+                            <span class="status-pill valid">Verified</span>
+                        {% else %}
+                            <span class="status-pill tampered">Tampered</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

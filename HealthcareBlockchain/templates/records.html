@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Records Directory{% endblock %}
+{% block page_title %}Medical Records Directory{% endblock %}
+{% block page_subtitle %}Central repository of electronic clinical records and blockchain anchors{% endblock %}
+
+{% block top_actions %}
+{% if session.get('role') == 'doctor' %}
+<a href="{{ url_for('create_record_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Medical Record
+</a>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            Medical Records ({{ records|length }})
+        </div>
+        <input type="text" class="form-control table-search-input" data-target-table="records-table" placeholder="Search by patient, doctor, diagnosis..." style="max-width: 280px; padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+    </div>
+    <div class="table-responsive">
+        <table class="data-table" id="records-table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Patient</th>
+                    <th>Attending Doctor</th>
+                    <th>Type</th>
+                    <th>Diagnosis / Clinical Summary</th>
+                    <th>Version</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in records %}
+                <tr>
+                    <td><strong>#{{ rec.id }}</strong></td>
+                    <td>
+                        <a href="{{ url_for('view_patient_detail', patient_id=rec.patient_id) }}" style="text-decoration: none; font-weight: 600; color: var(--primary);">
+                            {{ rec.patient_name }}
+                        </a>
+                        <div style="font-size: 0.72rem; color: var(--text-muted);">{{ rec.patient_code }}</div>
+                    </td>
+                    <td>{{ rec.doctor_name }}</td>
+                    <td><span class="status-pill info">{{ rec.record_type }}</span></td>
+                    <td>
+                        <div style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rec.diagnosis }}">
+                            {{ rec.diagnosis }}
+                        </div>
+                    </td>
+                    <td><span class="status-pill warning">v{{ rec.current_version }}</span></td>
+                    <td>{{ rec.created_at[:10] }}</td>
+                    <td>
+                        <div style="display: flex; gap: 0.4rem;">
+                            <a href="{{ url_for('view_record_detail', record_id=rec.id) }}" class="btn btn-secondary btn-sm">
+                                View
+                            </a>
+                            {% if session.get('role') == 'doctor' %}
+                            <a href="{{ url_for('edit_record_page', record_id=rec.id) }}" class="btn btn-primary btn-sm">
+                                Update
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-state">No medical records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

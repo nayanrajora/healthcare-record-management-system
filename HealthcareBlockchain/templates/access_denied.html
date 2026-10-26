@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied (403 Forbidden){% endblock %}
+{% block page_title %}Access Denied{% endblock %}
+{% block page_subtitle %}Security Clearance & Role-Based Authorization Enforcement{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 3rem auto; text-align: center;">
+    <div class="card-body" style="padding: 3rem 2rem;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background-color: var(--danger-bg); color: var(--danger-text); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+        <h2 style="font-size: 1.4rem; color: var(--text-main); margin-bottom: 0.75rem;">
+            403 - Forbidden Request
+        </h2>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6;">
+            You do not possess the required role permissions to access this clinical or administrative resource.
+            {% if current_role %}
+                Your current role is <strong class="user-badge badge-{{ current_role }}">{{ current_role }}</strong>.
+            {% endif %}
+            All unauthorized access attempts are recorded in the system audit log.
+        </p>
+        <div style="display: flex; justify-content: center; gap: 0.75rem;">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                Return to Dashboard
+            </a>
+            <a href="{{ url_for('view_blockchain') }}" class="btn btn-secondary">
+                View Public Ledger
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

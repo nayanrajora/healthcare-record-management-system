@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Portal{% endblock %}
+{% block page_title %}My Health Records{% endblock %}
+{% block page_subtitle %}Personal Electronic Health Record & Cryptographic Integrity Verification{% endblock %}
+
+{% block content %}
+<!-- Patient Demographic Profile -->
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(to right, #ffffff, #eff6ff);">
+    <div class="card-header" style="background: transparent;">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Patient Identity & Demographic Profile
+        </div>
+        <span class="status-pill valid">Blockchain Verified Identity</span>
+    </div>
+    <div class="card-body">
+        <div class="details-grid">
+            <div class="detail-item">
+                <span class="detail-label">Full Legal Name</span>
+                <span class="detail-value">{{ profile.full_name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Patient ID Code</span>
+                <span class="detail-value"><code>{{ profile.patient_code }}</code></span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value">{{ profile.date_of_birth }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Blood Group</span>
+                <span class="detail-value" style="color: #dc2626; font-weight: 700;">{{ profile.blood_group }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Contact Phone</span>
+                <span class="detail-value">{{ profile.contact_phone }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-label">Emergency Contact</span>
+                <span class="detail-value">{{ profile.emergency_contact }}</span>
+            </div>
+            <div class="detail-item" style="grid-column: 1 / -1;">
+                <span class="detail-label">Residential Address</span>
+                <span class="detail-value">{{ profile.address }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Medical Records -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+            My Clinical History & Prescriptions
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Record ID</th>
+                    <th>Attending Doctor</th>
+                    <th>Record Type</th>
+                    <th>Diagnosis / Clinical Summary</th>
+                    <th>Version</th>
+                    <th>Recorded Date</th>
+                    <th>Cryptographic Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in records_with_status %}
+                {% set rec = item.record %}
+                {% set status = item.status %}
+                <tr>
+                    <td><strong>#{{ rec.id }}</strong></td>
+                    <td>{{ rec.doctor_name }}</td>
+                    <td><span class="status-pill info">{{ rec.record_type }}</span></td>
+                    <td>
+                        <div style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ rec.diagnosis }}">
+                            {{ rec.diagnosis }}
+                        </div>
+                    </td>
+                    <td><span class="status-pill warning">v{{ rec.current_version }}</span></td>
+                    <td>{{ rec.created_at[:10] }}</td>
+                    <td>
+                        {% if status.is_valid %}
+                            <span class="status-pill valid" title="Canonical SHA-256 hash matches immutable blockchain block">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                                Verified
+                            </span>
+                        {% else %}
+                            <span class="status-pill tampered" title="Data does not match recorded blockchain hash!">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Tamper Detected
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('view_record_detail', record_id=rec.id) }}" class="btn btn-secondary btn-sm">
+                            View Record
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                        <h3>No Medical Records Found</h3>
+                        <p>You have no medical records registered yet. Records created by attending doctors will appear here automatically.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Tamper Simulation Workbench{% endblock %}
+{% block page_title %}Tamper Simulation & Viva Demonstration Workbench{% endblock %}
+{% block page_subtitle %}Interactive testing laboratory to demonstrate cryptographic tamper-detection to evaluators{% endblock %}
+
+{% block top_actions %}
+<a href="{{ url_for('verify_blockchain_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Check Verification Results
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem; background: linear-gradient(to right, #ffffff, #fffbeb);">
+    <div class="card-body">
+        <h3 style="font-size: 1.15rem; color: #92400e; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            How To Demonstrate This Feature in Your Viva
+        </h3>
+        <p style="font-size: 0.9rem; color: #78350f; line-height: 1.6;">
+            In traditional relational healthcare databases, a database administrator or malicious actor can open SQLite/MySQL 
+            and modify a patient's prescription or diagnosis without leaving any trace. 
+            In this system, because each clinical entry was hashed with <strong>SHA-256</strong> and chained into a blockchain block, 
+            any direct SQL modification produces an <em>avalanche effect</em> mismatch that is immediately caught by the verification engine!
+        </p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Simulation 1: Database Record Tampering -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title" style="color: #dc2626;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Simulation 1: Alter Database Record
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+                Simulates an unauthorized direct SQL update to <strong>Record #1 (Version 1)</strong>'s prescription 
+                (e.g., secretly altering Amlodipine to an unauthorized dosage) without going through the blockchain logic.
+            </p>
+            <form action="{{ url_for('tamper_demo_action') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action_type" value="tamper_record">
+                <button type="submit" class="btn btn-danger btn-block" data-confirm="Simulate malicious SQL modification on Record #1?">
+                    Simulate Record Tampering
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Simulation 2: Blockchain Link Tampering -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title" style="color: #dc2626;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/></svg>
+                Simulation 2: Break Hash Pointer
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+                Simulates modifying the <code>previous_hash</code> pointer of <strong>Block #2</strong>. 
+                This demonstrates how cryptographic chaining detects any alteration to the ledger history itself.
+            </p>
+            <form action="{{ url_for('tamper_demo_action') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action_type" value="tamper_block">
+                <button type="submit" class="btn btn-danger btn-block" data-confirm="Simulate breaking hash pointer on Block #2?">
+                    Break Blockchain Link
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recovery: Restore Database State -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title" style="color: #059669;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Restoration: Revert to Authentic State
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+                Re-seeds the pristine demonstration medical records and recomputes the valid blockchain hash chain, 
+                returning the system to 100% verified status.
+            </p>
+            <form action="{{ url_for('tamper_demo_action') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action_type" value="restore_all">
+                <button type="submit" class="btn btn-primary btn-block" data-confirm="Restore all database records and blocks to pristine authentic state?">
+                    Restore Authentic Demo Data
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Step-by-step viva presentation flow -->
+<div class="card">
+    <div class="card-header">
+        <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Demonstration Script for Faculty Evaluators
+        </div>
+    </div>
+    <div class="card-body">
+        <ol style="padding-left: 1.5rem; font-size: 0.9rem; line-height: 1.8; color: var(--text-main);">
+            <li>Navigate to <strong>Integrity Audit</strong>: Show that the initial system is <strong>100% Verified</strong> (green shield).</li>
+            <li>Return here and click <strong>Simulate Record Tampering</strong>: Explain that this simulates an attacker secretly modifying clinical data directly in SQLite.</li>
+            <li>Click <strong>Check Verification Results</strong>: Show the examiner that the system instantly detects the exact record ID and displays the cryptographic hash mismatch in red.</li>
+            <li>Click <strong>Restore Authentic Demo Data</strong> and re-verify: Show the green shield restored!</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
